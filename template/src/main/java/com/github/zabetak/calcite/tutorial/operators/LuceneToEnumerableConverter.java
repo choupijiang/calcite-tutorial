@@ -16,8 +16,22 @@
  */
 package com.github.zabetak.calcite.tutorial.operators;
 
-import org.apache.calcite.adapter.enumerable.EnumerableConvention;
-import org.apache.calcite.adapter.enumerable.EnumerableRel;
+import com.github.zabetak.calcite.tutorial.LuceneEnumerable;
+import org.apache.calcite.adapter.enumerable.*;
+import org.apache.calcite.linq4j.tree.*;
+import org.apache.calcite.plan.ConventionTraitDef;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitDef;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterImpl;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.lang.reflect.Method;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Relational expression that converts an lucene input to enumerable calling convention.
@@ -30,17 +44,58 @@ import org.apache.calcite.adapter.enumerable.EnumerableRel;
  * @see LuceneRel#LUCENE
  * @see EnumerableConvention
  */
-public final class LuceneToEnumerableConverter {
-  // TODO 1. Extend ConverterImpl
+public final class LuceneToEnumerableConverter extends ConverterImpl implements EnumerableRel{
+
+    protected LuceneToEnumerableConverter(RelNode child) {
+        super(child.getCluster(), ConventionTraitDef.INSTANCE, child.getCluster().traitSetOf(EnumerableConvention.INSTANCE), child);
+    }
+    // TODO 1. Extend ConverterImpl
   // TODO 2. Implement RelNode.copy
+
+    @Override public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        return new LuceneToEnumerableConverter(inputs.get(0));
+    }
+
   // TODO 3. Implement EnumerableRel interface
   // TODO 4. Implement EnumerableRel#implement method
-  //  The generated java code should resemble the snippet below:
-  //  java.util.LinkedHashMap fields = new java.util.LinkedHashMap();
-  //  fields.put("ps_partkey", org.apache.calcite.sql.type.SqlTypeName.INTEGER);
-  //  fields.put("ps_suppkey", org.apache.calcite.sql.type.SqlTypeName.INTEGER);
-  //  fields.put("ps_availqty", org.apache.calcite.sql.type.SqlTypeName.INTEGER);
-  //  fields.put("ps_supplycost", org.apache.calcite.sql.type.SqlTypeName.DOUBLE);
-  //  fields.put("ps_comment", org.apache.calcite.sql.type.SqlTypeName.VARCHAR);
-  //  return new LuceneEnumerable("target/tpch/PARTSUPP", fields, "*:*");
+
+    @Override
+    public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
+        //  The generated java code should resemble the snippet below:
+        //  java.util.LinkedHashMap fields = new java.util.LinkedHashMap();
+        //  fields.put("ps_partkey", org.apache.calcite.sql.type.SqlTypeName.INTEGER);
+        //  fields.put("ps_suppkey", org.apache.calcite.sql.type.SqlTypeName.INTEGER);
+        //  fields.put("ps_availqty", org.apache.calcite.sql.type.SqlTypeName.INTEGER);
+        //  fields.put("ps_supplycost", org.apache.calcite.sql.type.SqlTypeName.DOUBLE);
+        //  fields.put("ps_comment", org.apache.calcite.sql.type.SqlTypeName.VARCHAR);
+        //  return new LuceneEnumerable("target/tpch/PARTSUPP", fields, "*:*");
+        try {
+            BlockBuilder codeBlock = new BlockBuilder();
+            DeclarationStatement fieldStmt =
+                    Expressions.declare(0, "fields", Expressions.new_(LinkedHashMap.class));
+            codeBlock.add(fieldStmt);
+            Method putMethod = Map.class.getMethod("put", Object.class, Object.class);
+            for (RelDataTypeField f : getRowType().getFieldList()) {
+                ConstantExpression fieldName = Expressions.constant(f.getName());
+                ConstantExpression fieldType = Expressions.constant(f.getType().getSqlTypeName());
+                MethodCallExpression callPut =
+                        Expressions.call(fieldStmt.parameter, putMethod, fieldName, fieldType);
+                codeBlock.add(Expressions.statement(callPut));
+            }
+            ConstantExpression indexPath =
+                    Expressions.constant(((LuceneRel) input).implement().indexPath);
+            ConstantExpression luceneQuery =
+                    Expressions.constant(((LuceneRel) input).implement().query.toString());
+            NewExpression luceneEnumerable =
+                    Expressions.new_(LuceneEnumerable.class, indexPath, fieldStmt.parameter, luceneQuery);
+            codeBlock.add(Expressions.return_(null, luceneEnumerable));
+            PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(),
+                    pref.prefer(JavaRowFormat.ARRAY));
+            return implementor.result(physType, codeBlock.toBlock());
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 }

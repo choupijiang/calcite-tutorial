@@ -16,16 +16,39 @@
  */
 package com.github.zabetak.calcite.tutorial.operators;
 
+import com.github.zabetak.calcite.tutorial.LuceneTable;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelInput;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.hint.RelHint;
+import org.apache.lucene.search.MatchAllDocsQuery;
+
+import java.util.List;
 
 /**
  * Implementation of {@link TableScan} in {@link LuceneRel#LUCENE} convention.
  *
  * The expression knows where is the Lucene index located and how to access it.
  */
-public final class LuceneTableScan {
-  // TODO 1. Extend TableScan operator
-  // TODO 2. Implement LuceneRel interface
-  // TODO 3. Implement missing methods
+public final class LuceneTableScan extends TableScan implements LuceneRel{
+
+
+    // TODO 1. Extend TableScan operator
+    protected LuceneTableScan(RelOptCluster cluster, RelTraitSet traitSet, List<RelHint> hints, RelOptTable table) {
+        super(cluster, traitSet, hints, table);
+    }
+
+    // TODO 2. Implement LuceneRel interface
+
+    // TODO 3. Implement missing methods
+
+    @Override
+    public Result implement() {
+        LuceneTable t = getTable().unwrap(LuceneTable.class);
+        return new Result(t.indexPath(), new MatchAllDocsQuery());
+    }
+
 
 }
