@@ -36,7 +36,7 @@ public final class LuceneTableScan extends TableScan implements LuceneRel{
 
 
     // TODO 1. Extend TableScan operator
-    protected LuceneTableScan(RelOptCluster cluster, RelTraitSet traitSet, List<RelHint> hints, RelOptTable table) {
+    public LuceneTableScan(final RelOptCluster cluster, final RelTraitSet traitSet, final List<RelHint> hints, final RelOptTable table) {
         super(cluster, traitSet, hints, table);
     }
 

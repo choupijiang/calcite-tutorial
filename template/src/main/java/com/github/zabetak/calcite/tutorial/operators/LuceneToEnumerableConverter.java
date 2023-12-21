@@ -46,7 +46,7 @@ import java.util.Map;
  */
 public final class LuceneToEnumerableConverter extends ConverterImpl implements EnumerableRel{
 
-    protected LuceneToEnumerableConverter(RelNode child) {
+    public LuceneToEnumerableConverter(RelNode child) {
         super(child.getCluster(), ConventionTraitDef.INSTANCE, child.getCluster().traitSetOf(EnumerableConvention.INSTANCE), child);
     }
     // TODO 1. Extend ConverterImpl

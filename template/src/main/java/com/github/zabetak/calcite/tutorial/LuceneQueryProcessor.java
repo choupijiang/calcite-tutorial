@@ -19,6 +19,8 @@ package com.github.zabetak.calcite.tutorial;
 import com.github.zabetak.calcite.tutorial.indexer.DatasetIndexer;
 import com.github.zabetak.calcite.tutorial.indexer.TpchTable;
 import com.github.zabetak.calcite.tutorial.rules.LuceneFilterRule;
+import com.github.zabetak.calcite.tutorial.rules.LuceneTableScanRule;
+import com.github.zabetak.calcite.tutorial.rules.LuceneToEnumerableConverterRule;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.adapter.enumerable.EnumerableInterpretable;
@@ -129,10 +131,6 @@ public class LuceneQueryProcessor {
             SqlToRelConverter.config()
             );
 
-
-
-
-
     // TODO 12. Convert the valid AST into a logical plan
     RelNode logPlan = sqlToRelConverter.convertQuery(validNode, false, true).rel;
 
@@ -153,6 +151,8 @@ public class LuceneQueryProcessor {
     planner.addRule(EnumerableRules.ENUMERABLE_AGGREGATE_RULE);
     planner.addRule(EnumerableRules.ENUMERABLE_TABLE_SCAN_RULE);
     planner.addRule(LuceneFilterRule.DEFAULT.toRule());
+    planner.addRule(LuceneTableScanRule.DEFAULT.toRule());
+    planner.addRule(LuceneToEnumerableConverterRule.DEFAULT.toRule());
     // TODO 15. Define the type of the output plan (in this case we want a physical plan in  EnumerableContention)
     logPlan = planner.changeTraits(logPlan,
             cluster.traitSet().replace(EnumerableConvention.INSTANCE));

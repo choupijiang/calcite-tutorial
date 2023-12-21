@@ -18,14 +18,38 @@ package com.github.zabetak.calcite.tutorial.rules;
 
 import com.github.zabetak.calcite.tutorial.operators.LuceneToEnumerableConverter;
 import com.github.zabetak.calcite.tutorial.operators.LuceneRel;
+import org.apache.calcite.adapter.enumerable.EnumerableConvention;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.calcite.rel.logical.LogicalTableScan;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static com.github.zabetak.calcite.tutorial.operators.LuceneRel.LUCENE;
 
 /**
  * Planner rule converting any kind of {@link LuceneRel} expression to
  * {@link org.apache.calcite.adapter.enumerable.EnumerableRel} by creating a
  * {@link LuceneToEnumerableConverter}.
  */
-public final class LuceneToEnumerableConverterRule {
-  // TODO 1. Extend ConverterRule
+public final class LuceneToEnumerableConverterRule extends ConverterRule {
+    public LuceneToEnumerableConverterRule(final Config config) {
+        super(config);
+    }
+    // TODO 1. Extend ConverterRule
   // TODO 2. Implement convert method
-  // TODO 3. Create DEFAULT configuration for rule
+
+    @Override
+    public @Nullable RelNode convert(RelNode rel) {
+        return new LuceneToEnumerableConverter(rel);
+    }
+
+    // TODO 3. Create DEFAULT configuration for rule
+    public static final Config DEFAULT = Config.INSTANCE
+            .withConversion(
+                    LuceneRel.class,
+                    LUCENE,
+                    EnumerableConvention.INSTANCE,
+                    "LuceneEnumerableConverterRule")
+            .withRuleFactory(LuceneToEnumerableConverterRule::new);
 }
