@@ -137,7 +137,7 @@ public class LuceneQueryProcessor {
     // TODO 13. Display the logical plan with explain attributes
     System.out.println(
             RelOptUtil.dumpPlan("[Logical plan]", logPlan, SqlExplainFormat.TEXT,
-                    SqlExplainLevel.NON_COST_ATTRIBUTES));
+                    SqlExplainLevel.ALL_ATTRIBUTES));
 
     // TODO 14. Initialize optimizer/planner with the necessary rules
     RelOptPlanner planner = cluster.getPlanner();
@@ -149,7 +149,6 @@ public class LuceneQueryProcessor {
     planner.addRule(EnumerableRules.ENUMERABLE_LIMIT_RULE);
     planner.addRule(EnumerableRules.ENUMERABLE_VALUES_RULE);
     planner.addRule(EnumerableRules.ENUMERABLE_AGGREGATE_RULE);
-    planner.addRule(EnumerableRules.ENUMERABLE_TABLE_SCAN_RULE);
     planner.addRule(LuceneFilterRule.DEFAULT.toRule());
     planner.addRule(LuceneTableScanRule.DEFAULT.toRule());
     planner.addRule(LuceneToEnumerableConverterRule.DEFAULT.toRule());
@@ -164,7 +163,7 @@ public class LuceneQueryProcessor {
     // TODO 17. Display the physical plan
     System.out.println(
             RelOptUtil.dumpPlan("[Physical plan]", phyPlan, SqlExplainFormat.TEXT,
-                    SqlExplainLevel.NON_COST_ATTRIBUTES));
+                    SqlExplainLevel.ALL_ATTRIBUTES));
 
     // TODO 18. Compile generated code and obtain the executable program
     Bindable executablePlan = EnumerableInterpretable.toBindable(
